@@ -1,0 +1,28 @@
+- job:
+    name: logstash-input-gitrepo_docker-build-elk-host
+    project-type: freestyle
+    description: |
+      ELK host is a docker image with docker and other tool enabled for
+      running docker inside docker.
+    display-name: '[LIP-GitRepo] Docker build ELK-host image'
+    concurrent: false
+    node: lip-gitrepo_docker
+    scm:
+      - logstash-input-gitrepo
+    builders:
+      - shell:
+          !include-raw ../scripts/merge.sh
+      - shell: |
+          set +x
+          pushd "${WORKSPACE}/logstash-input-gitrepo_${BUILD_NUMBER}/docker/ELK-host"
+          if [ $(git diff --stat "HEAD^" -- . | wc -l) -gt 0 ] ||
+             [ $(git diff --stat "HEAD^" -- ../node/ | wc -l) -gt 0 ]
+          then
+            echo "============================"
+            echo "Docker - Building ELK-host Image"
+            echo "============================"
+            docker build -t "lip_gitrepo/host_test" .
+          else
+            docker tag -f lip_gitrepo/docker host_test
+            echo "Nothing changed"
+          fi

@@ -1,0 +1,32 @@
+- job:
+    name: logstash-input-gitrepo_continues-deployment
+    display-name: '[LIP-GitRepo] Continues Deployment'
+    project-type: freestyle
+    description: |
+      Apply submitted patches and start POC deployment.
+    concurrent: false
+    scm:
+      - logstash-input-gitrepo
+      - logstash-input-gitrepo-ci
+    triggers:
+      - gerrit:
+          trigger-on:
+              - change-merged-event
+              - change-restored-event
+          projects:
+              - project-compare-type: 'PLAIN'
+                project-pattern: 'abraverm/logstash-input-gitrepo'
+                branches:
+                  - branch-compare-type: 'PLAIN'
+                    branch-pattern: 'master'
+    node: lip-gitrepo_docker
+    parameters:
+        - string:
+            name: GERRIT_REFSPEC
+            default: refs/heads/master
+        - string:
+            name: GERRIT_BRANCH
+            default: origin/master
+    builders:
+      - shell:
+          !include-raw scripts/deploy.sh

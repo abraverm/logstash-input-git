@@ -1,0 +1,24 @@
+- job:
+    name: logstash-input-gitrepo_plugin-install
+    project-type: freestyle
+    description: |
+      This is an integration test, part of Tier 1 test set.<br>
+      It will install the plugin on Logstash. Major versions of Logstash have
+      diffrent methods for installing a plugin.
+    display-name: '[LIP-GitRepo] Plugin install test'
+    concurrent: true
+    node: lip-gitrepo_docker-logstash
+    scm:
+      - logstash-input-gitrepo
+    builders:
+      - shell:
+          !include-raw ../scripts/merge.sh
+      - shell:
+          !include-raw ../scripts/plugin_build.sh
+      - shell: |
+          set +x
+          echo "====================="
+          echo "Installing the plugin"
+          echo "====================="
+      - shell:
+          !include-raw ../scripts/plugin_install_1.4.2_packaged.sh

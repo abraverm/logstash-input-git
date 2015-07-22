@@ -1,0 +1,18 @@
+- scm:
+    name: logstash-input-gitrepo
+    scm:
+      - git:
+         url: https://review.gerrithub.io/abraverm/logstash-input-gitrepo
+         refspec: $GERRIT_REFSPEC
+         branches:
+            - $GERRIT_BRANCH
+         choosing-strategy: 'gerrit'
+         basedir: "logstash-input-gitrepo_${BUILD_NUMBER}"
+- scm:
+    name: logstash-input-gitrepo-ci
+    scm:
+      - git:
+         url: https://review.gerrithub.io/abraverm/logstash-input-gitrepo
+         branches:
+            - ci
+         basedir: "logstash-input-gitrepo_ci"
