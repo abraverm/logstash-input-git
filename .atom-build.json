@@ -1,0 +1,4 @@
+{
+  "cmd": "./test.sh",
+  "sh": true
+}
