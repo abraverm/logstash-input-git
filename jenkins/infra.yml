@@ -1,0 +1,51 @@
+- job:
+    name: logstash-input-gitrepo_infra-image-build
+    project-type: flow
+    description: |
+      Building, testing and deploying Docker images.
+    display-name: '[LIP-GitRepo] Infrasructure'
+    concurrent: false
+    triggers:
+      - gerrit:
+          trigger-on:
+              - patchset-created-event
+          projects:
+              - project-compare-type: 'PLAIN'
+                project-pattern: 'abraverm/logstash-input-gitrepo'
+                branches:
+                  - branch-compare-type: 'PLAIN'
+                    branch-pattern: 'ci'
+                file-paths:
+                  - compare-type: 'ANT'
+                    pattern: '**/docker/**'
+          skip-vote:
+              unstable: true
+              notbuilt: true
+          trigger-for-unreviewed-patches: true
+    node: master
+    dsl: |
+      guard {
+        build("logstash-input-gitrepo_docker-build-node",
+              gerrit_refspec: params["GERRIT_REFSPEC"],
+              deploy: build.number
+                )
+        parallel (
+          {
+            build("logstash-input-gitrepo_docker-build-elk-host",
+                  gerrit_refspec: params["GERRIT_REFSPEC"],
+                  deploy: build.number)
+            build("logstash-input-gitrepo_docker-build-logstash",
+                  gerrit_refspec: params["GERRIT_REFSPEC"],
+                  deploy: build.number)
+            build("logstash-input-gitrepo_docker-test-elk",
+                  gerrit_refspec: params["GERRIT_REFSPEC"],
+                  deploy: build.number)
+          },
+          { retry ( 2 ) { build("logstash-input-gitrepo_docker-build-jjb",
+                            gerrit_refspec: params["GERRIT_REFSPEC"],
+                            deploy: build.number) }}
+        )
+        build("logstash-input-gitrepo_docker-image-deploy", deploy: build.number)
+      } rescue {
+        build("logstash-input-gitrepo_docker-image-cleanup", deploy: build.number)
+      }

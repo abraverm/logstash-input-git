@@ -1,0 +1,44 @@
+- job:
+    name: logstash-input-gitrepo_ruby-code-analysis
+    project-type: freestyle
+    description: |
+      Does code analysis on ruby on new commits.<br>
+      Using RuboCop for code analysis: https://github.com/bbatsov/rubocop
+    display-name: '[LIP-GitRepo] Ruby code analysis'
+    concurrent: true
+    node: lip-gitrepo_docker-logstash
+    scm:
+      - logstash-input-gitrepo
+    publishers:
+      - html-publisher:
+          name: "RuboCop"
+          dir: "build/"
+          files: "rubocop.html"
+          keep-all: true
+          allow-missing: true
+    parameters:
+       - string:
+          name: GERRIT_REFSPEC
+          default: refs/heads/master
+       - string:
+          name: GERRIT_BRANCH
+          default: origin/master
+    builders:
+      - shell:
+          !include-raw ../scripts/merge.sh
+      - shell: |
+          set +x
+          echo "====================="
+          echo "Running Code Analysis"
+          echo "====================="
+          export PATH=$PATH:/usr/local/rvm/bin/
+          echo "---------------------"
+          echo "Ruby-lint for Logic  "
+          echo "---------------------"
+          rvm jruby do jrlint || exit_code=1
+
+          echo "---------------------"
+          echo "RuboCop for Semantics"
+          echo "---------------------"
+          rvm jruby do rubocop --display-cop-names --format html --out "${WORKSPACE}/build/rubocop.html" --rails --fail-level refactor || exit_code=1
+          exit $exit_code

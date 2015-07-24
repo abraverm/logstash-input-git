@@ -1,0 +1,17 @@
+- job:
+    name: logstash-input-gitrepo_docker-image-deploy
+    project-type: freestyle
+    description: |
+      Deploy built docker images.
+    display-name: '[LIP-GitRepo] Docker image deploy'
+    concurrent: false
+    node: lip-gitrepo_docker
+    builders:
+      - shell: |
+          set -x
+          docker images
+          docker tag -f lip_gitrepo/jjb_test lip_gitrepo/jjb || echo "JJB image wasn't changed"
+          docker tag -f lip_gitrepo/ruby_test lip_gitrepo/ruby || echo "Ruby image wasn't changed"
+          docker tag -f lip_gitrepo/node_test lip_gitrepo/node || echo "Base node image wasn't changed"
+          docker tag -f lip_gitrepo/host_test lip_gitrepo/docker || echo "ELK host image wasn't changed"
+          docker tag -f lip_gitrepo/logstash_test lip_gitrepo/logstash || echo "Logstash image wasn't changed"

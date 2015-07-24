@@ -1,0 +1,15 @@
+- job:
+    name: logstash-input-gitrepo_docker-test-elk
+    project-type: freestyle
+    description: |
+      Sanity test for ELK suite environment.
+    display-name: '[LIP-GitRepo] Docker ELK Test'
+    concurrent: false
+    node: lip-gitrepo_docker
+    scm:
+      - logstash-input-gitrepo
+    builders:
+      - shell:
+          !include-raw ../scripts/merge.sh
+      - shell:
+          !include-raw ../scripts/ELK_image_test.sh

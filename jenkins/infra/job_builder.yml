@@ -1,0 +1,57 @@
+- job:
+    name: logstash-input-gitrepo_job-builder-test
+    project-type: freestyle
+    description: |
+      Gate job which checks syntax of new or changed jobs.
+    display-name: '[LIP-GitRepo] Gate - Job builder Syntax test'
+    concurrent: true
+    node: lip-gitrepo_docker-job-builder
+    scm:
+      - logstash-input-gitrepo
+    triggers:
+      - gerrit:
+          trigger-on:
+            - patchset-created-event
+          projects:
+            - project-compare-type: 'PLAIN'
+              project-pattern: 'abraverm/logstash-input-gitrepo'
+              branches:
+                - branch-compare-type: 'PLAIN'
+                  branch-pattern: 'ci'
+              file-paths:
+                - compare-type: 'ANT'
+                  pattern: '**/jenkins/**'
+          skip-vote:
+            unstable: true
+            notbuilt: true
+          trigger-for-unreviewed-patches: true
+    builders:
+      - shell: |
+          {
+            set +x
+            echo "====================="
+            echo "Checking Commit"
+            echo "====================="
+            echo "==== Trying merge to master ===="
+            pushd "$WORKSPACE/logstash-input-gitrepo_${BUILD_NUMBER}"
+            # store the checked-out refspec in a branch
+            git checkout -b thechange
+            # switch to branch
+            git checkout ci
+            # and merge or fail
+            if ! git merge --commit -m 'Merge the gated change' thechange; then
+              echo -e "\033[01;31m===> This change has to be rebased!\033[00m"
+              echo ""
+              exit 1
+            fi
+            echo " - merge to master OK"
+            echo "====================="
+            echo ""
+            echo "changes:"
+            if [ "$GERRIT_REFSPEC" != "refs/heads/ci" ]; then
+              git diff HEAD^..HEAD
+            fi
+            pushd "$WORKSPACE/logstash-input-gitrepo_${BUILD_NUMBER}"
+          } && {
+            jenkins-jobs --ignore-cache test -r jenkins
+          }

@@ -1,0 +1,46 @@
+- job:
+    name: logstash-input-gitrepo_test-elk
+    project-type: freestyle
+    description: |
+      <h1>TO-DO</h1>
+      <p>
+      This is an system integration test, part of Tier 3 test set.<br>
+      System integration testing (SIT) is a testing process that exercises a
+      software systems coexistence with others.<br>
+      http://en.wikipedia.org/wiki/System_integration_testing
+      <br>
+      It will run a full ELK environment with the plugin.
+      </p>
+    display-name: '[LIP-GitRepo] ELK System integration'
+    concurrent: true
+    node: lip-gitrepo_docker
+    parameters:
+      - string:
+          name: GERRIT_REFSPEC
+      - string:
+          name: GERRIT_BRANCH
+    scm:
+      - logstash-input-gitrepo
+      - logstash-input-gitrepo-ci
+    builders:
+      - shell:
+          !include-raw ../scripts/merge.sh
+      - shell:
+          !include-raw ../scripts/elk_start.sh
+      - shell:
+          !include-raw ../scripts/elk_setup_dns.sh
+      - shell:
+          !include-raw ../scripts/elk_test.sh
+      - python:
+          !include-raw ../scripts/kibana_init.py
+      - python:
+          !include-raw ../scripts/kibana_discover.py
+    publishers:
+      - postbuildscript:
+          builders:
+            - shell:
+                !include-raw ../scripts/elk_cleanup.sh
+      - archive:
+          artifacts: '*.png, *.log'
+          allow-empty: 'true'
+          fingerprint: true
