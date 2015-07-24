@@ -1,0 +1,27 @@
+- job:
+    name: logstash-input-gitrepo_docker-build-logstash
+    project-type: freestyle
+    description: |
+      Base images of Logstash with stable installation and ruby environment for
+      development version.
+    display-name: '[LIP-GitRepo] Docker build Logstash'
+    concurrent: false
+    node: lip-gitrepo_docker
+    scm:
+      - logstash-input-gitrepo
+    builders:
+      - shell:
+          !include-raw ../scripts/merge.sh
+      - shell: |
+          set +x
+          pushd "${WORKSPACE}/logstash-input-gitrepo_${BUILD_NUMBER}/docker/logstash"
+          if [ $(git diff-index --name-only "HEAD^" | wc -l) -gt 0 ] ||
+             [ $(git diff --stat "HEAD^" -- ../node/ | wc -l) -gt 0 ]
+          then
+            echo "================================"
+            echo "Docker - Building Logstash Image"
+            echo "================================"
+            docker build -t "lip_gitrepo/logstash_test" .
+          else
+            echo "Nothing changed"
+          fi

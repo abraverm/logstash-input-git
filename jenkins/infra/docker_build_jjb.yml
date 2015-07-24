@@ -1,0 +1,26 @@
+- job:
+    name: logstash-input-gitrepo_docker-build-jjb
+    project-type: freestyle
+    description: |
+      Jenkins-Job-Builder is an image for testing jenkins jobs defenition.
+    display-name: '[LIP-GitRepo] Docker build JJB node image'
+    concurrent: false
+    node: lip-gitrepo_docker
+    scm:
+      - logstash-input-gitrepo
+    builders:
+      - shell:
+          !include-raw ../scripts/merge.sh
+      - shell: |
+          set +x
+          pushd "${WORKSPACE}/logstash-input-gitrepo_${BUILD_NUMBER}/docker/jjb"
+          if [ $(git diff-index --name-only HEAD | wc -l) -gt 0 ] ||
+             [ $(git diff --stat "HEAD^" -- ../node/ | wc -l) -gt 0 ]
+          then
+            echo "============================"
+            echo "Docker - Building JJB Node Image"
+            echo "============================"
+            docker build -t "lip_gitrepo/jjb_test" .
+          else
+            echo "Nothing changed"
+          fi

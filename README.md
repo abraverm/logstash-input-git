@@ -1,2 +1,2 @@
-# logstash-input-git
-Logstash input plugin for Git repositories
+# logstash-input-gitrepo
+GitRepo input plugin for GitRepo

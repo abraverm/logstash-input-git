@@ -1,0 +1,43 @@
+- job:
+    name: logstash-input-gitrepo_rspec-test
+    project-type: freestyle
+    description: |
+      <p>
+      RSpec is a behavior-driven development (BDD) framework for the
+      Ruby programming language.
+      </p>
+      <ul>
+        <li>http://rspec.info/</li>
+        <li>ttp://betterspecs.org/</li>
+      </ul>
+    display-name: '[LIP-GitRepo] RSpec Tests'
+    concurrent: true
+    node: lip-gitrepo_docker-logstash
+    scm:
+     - logstash-input-gitrepo
+    publishers:
+     - html-publisher:
+          name: "RSpec"
+          dir: "build/"
+          files: "rspec.html"
+          keep-all: true
+          allow-missing: true
+    parameters:
+     - string:
+          name: GERRIT_REFSPEC
+          default: refs/heads/master
+     - string:
+          name: GERRIT_BRANCH
+          default: origin/master
+    builders:
+      - shell:
+          !include-raw ../scripts/merge.sh
+      - shell: |
+          set +x
+          pushd "${WORKSPACE}/logstash-input-gitrepo_${BUILD_NUMBER}"
+          echo "====================="
+          echo "Running RSpec Tests"
+          echo "====================="
+          export PATH=$PATH:/usr/local/rvm/bin/
+          rvm jruby do bundle install
+          rvm jruby do bundle exec rspec --color --fail-fast --format h -o "${WORKSPACE}/build/rspec.html"
