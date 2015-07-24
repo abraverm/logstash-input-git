@@ -1,19 +1,18 @@
 input {
   gitrepo {
     search_params => {
-      host => "BZ_HOST"
-      product => "BZ_PRODUCT"
-    }
+      repository => "GIT_REPO"
+      branch => "GIT_BRANCH"
   }
+    }
 }
 output {
   elasticsearch_http {
     host => "ES_HOST"
     port => ES_PORT
-    document_id => "%{[message][id]}"
+    document_id => "%{[sha]}"
     user => "ES_USER"
     password => "ES_PASSWORD"
     index => "ES_INDEX"
   }
 }
-

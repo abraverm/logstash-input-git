@@ -48,7 +48,7 @@ set +x
 echo "------------------------"
 echo "Creating Configurations"
 echo "------------------------"
-m4 -DES_HOST="$ES_HOST" -DES_PORT="$ES_PORT" -DES_USER="$ES_USER" -DES_PASSWORD="$ES_PASSWORD" -DBZ_HOST="$BZ_HOST" -DBZ_PRODUCT="$BZ_PRODUCT" /logstash.conf.m4 > /logstash.conf
+m4 -DES_HOST="$ES_HOST" -DES_PORT="$ES_PORT" -DES_USER="$ES_USER" -DES_PASSWORD="$ES_PASSWORD" -DES_INDEX="$GIT_INDEX" -DGIT_REPO="$GIT_REPO" -DGIT_BRANCH="$GIT_BRANCH" /logstash.conf.m4 > /logstash.conf
 echo "-----------------"
 echo "Starting Logstash"
 echo "-----------------"
