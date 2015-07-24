@@ -1,0 +1,17 @@
+- job:
+    name: logstash-input-gitrepo_docker-image-cleanup
+    project-type: freestyle
+    description: |
+      Cleanup leftovers of image deployment.
+    display-name: '[LIP-GitRepo] Docker image cleanup'
+    concurrent: false
+    node: lip-gitrepo_docker
+    builders:
+      - shell: |
+          set -x
+          docker rmi lip_gitrepo/jjb_test lip_gitrepo/ruby_test lip_gitrepo/host_test lip_gitrepo/node_test lip_gitrepo/logstash_test || echo "Some images were not found"
+          docker ps -a --no-trunc| grep 'Exit' | awk '{print $1}' | xargs -L 1 -r docker rm || echo "Some containers weren't deleted"
+          docker images -a --no-trunc | grep none | awk '{print $3}' | xargs -L 1 -r docker rmi || echo "Some images weren't deleted"
+          echo "=============================================================="
+          docker images
+          docker ps -a

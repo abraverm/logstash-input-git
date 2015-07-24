@@ -1,0 +1,5 @@
+logstash:
+  image: abraverm/lip_gitrepo:logstash
+  command: /bin/bash
+  expose:
+    - "22"

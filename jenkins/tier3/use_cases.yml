@@ -1,0 +1,16 @@
+- job:
+    name: logstash-input-gitrepo_use-cases
+    project-type: flow
+    description: |
+      <h1>TO-DO</h1>
+      <p>
+      This is an system test, part of Tier 3 test set.<br>
+      It will run a full ELK environment with the plugin and test use cases.
+      Use case is a list of steps, typically defining interactions between a
+      role and a system, to achieve a goal. The actor can be a human, an
+      external system, or time.
+      </p>
+    display-name: '[LIP-GitRepo] Use cases test suite'
+    concurrent: true
+    node: lip-gitrepo_docker
+    dsl: |

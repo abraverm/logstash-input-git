@@ -1,0 +1,216 @@
+- job:
+    name: logstash-input-gitrepo_continues-integration
+    display-name: '[LIP-GitRepo] Continues Integration'
+    project-type: flow
+    description: |
+      Testing and verifying submmited patches.<br>
+      <ul>
+        <li>
+          Tier-0 - Unit testing
+          <ul>
+            <li>Sanity testing - Code analysis</li>
+            <li>Smoke testing - rspec test</li>
+          <ul>
+        </li>
+        <li>
+          Tier-1 - Integration testing
+          <ul>
+            <li>Installation testing</li>
+            <li>Regression testing</li>
+          </ul>
+        </li>
+        <li>
+          Tier-2 - Component interface testing
+          <ul>
+            <li>Matrix testing with default plugins</li>
+          </ul>
+        </li>
+        <li>
+          Tiew-3 - System testing
+          <ul>
+            <li>ELK environment with the plugin
+              <ul>
+                <li>Compatibility testing</li>
+              </ul>
+            </li>
+            <li>Functional - Use cases</li>
+            <li>Non-functional testing
+            <ul>
+              <li> Performance</li>
+              <li> Scalability</li>
+              <li> Constraints</li>
+              <li> Security</li>
+            </ul>
+            </li>
+            <li>Destructive tests</li>
+          <ul>
+        </li>
+      <ul>
+    concurrent: true
+    scm:
+      - logstash-input-gitrepo
+    triggers:
+      - gerrit:
+          trigger-on:
+              - patchset-created-event
+          projects:
+              - project-compare-type: 'PLAIN'
+                project-pattern: 'abraverm/logstash-input-gitrepo'
+                branches:
+                  - branch-compare-type: 'PLAIN'
+                    branch-pattern: 'master'
+          skip-vote:
+              unstable: true
+              notbuilt: true
+          trigger-for-unreviewed-patches: true
+    node: master
+    parameters:
+       - string:
+          name: GERRIT_REFSPEC
+          default: refs/heads/master
+       - string:
+          name: GERRIT_BRANCH
+          default: origin/master
+    dsl: |
+      build("logstash-input-gitrepo_tier-0", GERRIT_REFSPEC: params["GERRIT_REFSPEC"], GERRIT_BRANCH: params["GERRIT_BRANCH"])
+      build("logstash-input-gitrepo_tier-1", GERRIT_REFSPEC: params["GERRIT_REFSPEC"], GERRIT_BRANCH: params["GERRIT_BRANCH"])
+      build("logstash-input-gitrepo_tier-2", GERRIT_REFSPEC: params["GERRIT_REFSPEC"], GERRIT_BRANCH: params["GERRIT_BRANCH"])
+      build("logstash-input-gitrepo_tier-3", GERRIT_REFSPEC: params["GERRIT_REFSPEC"], GERRIT_BRANCH: params["GERRIT_BRANCH"])
+
+- job:
+    name: logstash-input-gitrepo_tier-0
+    display-name: '[LIP-GitRepo] Tier 0 - Unit testing'
+    project-type: flow
+    description: |
+      <p>
+      Unit testing, also known as component testing, refers to tests that
+      verify the functionality of a specific section of code, usually at the
+      function level. In an object-oriented environment, this is usually at
+      the class level, and the minimal unit tests include the constructors and
+      destructors.
+      </p>
+
+      <p>
+      <u>Sanity testing</u>
+        Determines whether it is reasonable to proceed with further testing.
+        For this purpose we will run:<br>
+        <ul><li>Code analysis</li><ul>
+      </p>
+      <p>
+      <u>Smoke testing</u>
+        Consists of minimal attempts to operate the software, designed to
+        determine whether there are any basic problems that will prevent it from
+        working at all.<br>
+        <ul><li>RSpec tests</li><ul>
+      </p>
+      <p>
+      Those two jobs should take care of failing most submited patches and be
+      the starting point to any developer.
+      </p>
+    concurrent: true
+    parameters:
+       - string:
+          name: GERRIT_REFSPEC
+          default: refs/heads/master
+       - string:
+          name: GERRIT_BRANCH
+          default: origin/master
+    node: master
+    dsl: |
+      parallel (
+        { build("logstash-input-gitrepo_ruby-code-analysis", GERRIT_REFSPEC: params["GERRIT_REFSPEC"], GERRIT_BRANCH: params["GERRIT_BRANCH"] ) },
+        { build("logstash-input-gitrepo_rspec-test", GERRIT_REFSPEC: params["GERRIT_REFSPEC"], GERRIT_BRANCH: params["GERRIT_BRANCH"] )}
+      )
+
+- job:
+    name: logstash-input-gitrepo_tier-1
+    display-name: '[LIP-GitRepo] Tier 1 - Integration testing'
+    concurrent: true
+    node: master
+    project-type: flow
+    description: |
+      Integration testing is any type of software testing that seeks to verify
+      the interfaces between components against a software design.
+      Integration testing works to expose defects in the interfaces and
+      interaction between integrated components (modules). Progressively larger
+      groups of tested software components corresponding to elements of the
+      architectural design are integrated and tested until the software works
+      as a system.
+
+      - Installation testing
+        An installation test assures that the system is installed correctly
+        and working.
+      - Compatibility testing
+        A common cause of software failure (real or perceived) is a lack of its
+        compatibility with other application software, operating systems, or
+        target environments that differ greatly from the original.
+    parameters:
+       - string:
+          name: GERRIT_REFSPEC
+          default: refs/heads/master
+       - string:
+          name: GERRIT_BRANCH
+          default: origin/master
+    dsl: |
+      build("logstash-input-gitrepo_plugin-install", GERRIT_REFSPEC: params["GERRIT_REFSPEC"], GERRIT_BRANCH: params["GERRIT_BRANCH"])
+      build("logstash-input-gitrepo_compatibility", GERRIT_REFSPEC: params["GERRIT_REFSPEC"], GERRIT_BRANCH: params["GERRIT_BRANCH"])
+
+- job:
+    name: logstash-input-gitrepo_tier-2
+    display-name: '[LIP-GitRepo] Tier 2 - Component interface testing'
+    concurrent: true
+    node: master
+    project-type: flow
+    description: |
+      The practice of component interface testing can be used to check the
+      handling of data passed between various units, or subsystem components,
+      beyond full integration testing between those units.
+      Logstash units are the different plugins that come by default.
+    parameters:
+       - string:
+          name: GERRIT_REFSPEC
+          default: refs/heads/master
+       - string:
+          name: GERRIT_BRANCH
+          default: origin/master
+    dsl: |
+      build("logstash-input-gitrepo_plugin-matrix", GERRIT_REFSPEC: params["GERRIT_REFSPEC"], GERRIT_BRANCH: params["GERRIT_BRANCH"])
+
+- job:
+    name: logstash-input-gitrepo_tier-3
+    display-name: '[LIP-GitRepo] Tier 3 - System testing'
+    concurrent: true
+    node: master
+    project-type: flow
+    description: |
+      <p>
+      System testing, or end-to-end testing, tests a completely integrated
+      system to verify that it meets its requirements. In addition, the software
+      testing should ensure that the program, as well as working as expected,
+      does not also destroy or partially corrupt its operating environment or
+      cause other processes within that environment to become inoperative.
+      </p>
+      <ul>
+        <li>ELK environment with the plugin</li>
+        <li>Functional - Use cases</li>
+        <li>
+          Non-functional testing
+          <ul>
+            <li>Performance</li>
+            <li>Scalability</li>
+            <li>Constraints</li>
+            <li>Security</li>
+          </ul>
+        </li>
+        <li>Destructive tests</li>
+      <ul>
+    parameters:
+       - string:
+          name: GERRIT_REFSPEC
+          default: refs/heads/master
+       - string:
+          name: GERRIT_BRANCH
+          default: origin/master
+    dsl: |
+      build("logstash-input-gitrepo_test-elk", GERRIT_REFSPEC: params["GERRIT_REFSPEC"], GERRIT_BRANCH: params["GERRIT_BRANCH"])
+#      build("logstash-input-gitrepo_use-cases", GERRIT_REFSPEC: params["GERRIT_REFSPEC"], GERRIT_BRANCH: params["GERRIT_BRANCH"])

@@ -1,0 +1,19 @@
+- job:
+    name: logstash-input-gitrepo_plugin-matrix
+    project-type: freestyle
+    description: |
+      <h1>TO-DO</h1>
+      <p>
+      This is an component interface test, part of Tier 2 test set.<br>
+      The test will test the plugin against default plugins that come with
+      Logstash.<br>
+      It uses Logstash integration testing tools:<br>
+      https://github.com/elastic/logstash-integration-testing
+      </p>
+    display-name: '[LIP-GitRepo] Plugin Matrix'
+    concurrent: true
+    node: lip-gitrepo_docker-logstash
+    builders:
+      - shell: |
+          set +x
+          echo "TODO"

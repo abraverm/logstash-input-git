@@ -1,0 +1,20 @@
+logstash:
+  image: lip_gitrepo/logstash
+  links:
+    - elasticsearch
+  command: /bin/bash
+  expose:
+    - "22"
+kibana:
+  image: bobrik/kibana
+  environment:
+    - KIBANA_ES_URL=http://elasticsearch:9200
+  links:
+    - elasticsearch
+  ports:
+    - "5601"
+elasticsearch:
+  image: elasticsearch:1.5.1
+  expose:
+    - "9200"
+    - "9300"
