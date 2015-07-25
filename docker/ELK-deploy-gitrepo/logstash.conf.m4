@@ -1,10 +1,8 @@
 input {
   gitrepo {
-    search_params => {
-      repository => "GIT_REPO"
-      branch => "GIT_BRANCH"
+    repository => "GIT_REPO"
+    branch => "GIT_BRANCH"
   }
-    }
 }
 output {
   elasticsearch_http {
