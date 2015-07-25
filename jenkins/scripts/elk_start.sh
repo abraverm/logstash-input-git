@@ -1,5 +1,5 @@
 #!/bin/bash
-pushd "$WORKSPACE/logstash-input-gitrepo_ci/docker/ELK"
+pushd "$WORKSPACE/logstash-input-gitrepo_ci/docker/ELK-gitrepo"
 echo "====================="
 echo "Starting Environment"
 echo "====================="

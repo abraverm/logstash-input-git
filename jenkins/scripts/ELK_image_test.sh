@@ -5,7 +5,7 @@ if [ $(git diff --stat "HEAD^" -- . | wc -l) -gt 0 ] ||
    [ $(git diff --stat "HEAD^" -- docker/node/ | wc -l) -gt 0 ] ||
    [ $(git diff --stat "HEAD^" -- docker/logstash/ | wc -l) -gt 0 ]
 then
-  pushd "$WORKSPACE/logstash-input-gitrepo_${BUILD_NUMBER}/docker/ELK"
+  pushd "$WORKSPACE/logstash-input-gitrepo_${BUILD_NUMBER}/docker/ELK-gitrepo"
   # Step 1: Testing the environment
   {
     echo "====================="
@@ -14,7 +14,7 @@ then
     docker-compose up -d
     docker ps -a
     docker images
-    pushd "$WORKSPACE/logstash-input-gitrepo_${BUILD_NUMBER}/docker/ELK"
+    pushd "$WORKSPACE/logstash-input-gitrepo_${BUILD_NUMBER}/docker/ELK-gitrepo"
   } && {
     echo "====================="
     echo "     Setting DNS"
@@ -48,7 +48,7 @@ ENDSSH
   echo "====================="
   echo "Removing Environment"
   echo "====================="
-  pushd "$WORKSPACE/logstash-input-gitrepo_${BUILD_NUMBER}/docker/ELK"
+  pushd "$WORKSPACE/logstash-input-gitrepo_${BUILD_NUMBER}/docker/ELK-gitrepo"
   docker-compose stop
 
   docker-compose rm --force
