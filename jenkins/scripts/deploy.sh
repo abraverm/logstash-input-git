@@ -1,5 +1,5 @@
 #!/bin/bash
-pushd "$WORKSPACE/logstash-input-gitrepo_ci/docker/ELK-gitrepo-deploy"
+pushd "$WORKSPACE/logstash-input-gitrepo_ci/docker/ELK-deploy-gitrepo"
 
 echo "========================"
 echo "Removing old Deployment"
