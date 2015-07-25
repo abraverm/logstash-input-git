@@ -5,6 +5,7 @@ require 'logstash/inputs/base'
 require 'stud/interval'
 require 'rubygems'
 require 'git'
+require 'fileutils'
 
 # Logstash input plugin for getting commits from Git repository
 class LogStash::Inputs::GitRepo < LogStash::Inputs::Base
@@ -34,7 +35,7 @@ class LogStash::Inputs::GitRepo < LogStash::Inputs::Base
   config :repository,
          validate: :string,
          required: true,
-         default: 'https://github.com/git/git'
+         default: 'https://github.com/ruby/openssl.git'
 
   config :branch,
          validate: :string,
@@ -48,7 +49,7 @@ class LogStash::Inputs::GitRepo < LogStash::Inputs::Base
   # Interval time (in seconds) between update check Git for changes
   config :interval,
          validate: :number,
-         default: 5
+         default: 10
 
   # Logstash inputs must implement two main methods: register and run.
   # 'public' means the method can be called anywhere, not just within the class.
@@ -60,8 +61,8 @@ class LogStash::Inputs::GitRepo < LogStash::Inputs::Base
   public
 
   def register
-    git_clone(@repository)
-    @last_check = 0
+    @git = git_clone(@repository)
+    @last_check = @git.log('-ignore-missing').last.date.to_time.iso8601
   end # def register
 
   public
@@ -69,10 +70,9 @@ class LogStash::Inputs::GitRepo < LogStash::Inputs::Base
   def run(queue)
     Stud.interval(@interval) do
       begin
-        time = Time.now
         @git.pull
-        add_commits(queue, @last_check, time)
-        @last_check = time
+        add_commits(queue, @last_check)
+        @last_check = @git.log(1)[0].date.to_time.iso8601
       rescue LogStash::ShutdownSignal
         return
       end
@@ -84,15 +84,21 @@ class LogStash::Inputs::GitRepo < LogStash::Inputs::Base
   def git_clone(repository)
     @logger.info("Cloning Git repository from #{repository} on branch " \
       "#{branch} at /tmp/#{@name}_#{@branch}")
-    @git = Git.clone(@repository, @name, path: "/tmp/#{@name}_#{@branch}")
-    @git.fetch
-    @git.checkout(@branch)
+    FileUtils.remove_dir("/tmp/#{@name}_#{@branch}", force: true)
+    git = Git.clone(@repository, @name, path: "/tmp/#{@name}_#{@branch}")
+    git.fetch
+    git.checkout(@branch)
+    git
   end
 
   private
 
-  def add_commits(queue, from_date, to_date)
-    @git.log.since(from_date).until(to_date).each do |commit|
+  def add_commits(queue, from_date)
+    # TO-DO: by default the number of commits to greb is 30:
+    # git log -30 --no-color --pretty=raw
+    # this workaround change it to:
+    # git log --ignore-missing --no-color --pretty=raw
+    @git.log('-ignore-missing').since(from_date).each do |commit|
       commit_hash = commit2hash(commit)
       create_event(queue, commit_hash)
     end
