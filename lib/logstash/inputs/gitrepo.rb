@@ -70,7 +70,7 @@ class LogStash::Inputs::GitRepo < LogStash::Inputs::Base
   def run(queue)
     Stud.interval(@interval) do
       begin
-        @git.pull
+        @git.fetch
         add_commits(queue, @last_check)
         @last_check = @git.log(1)[0].date.to_time.iso8601
       rescue LogStash::ShutdownSignal
@@ -154,5 +154,7 @@ class LogStash::Inputs::GitRepo < LogStash::Inputs::Base
     @logger.debug("Addind event: #{event}")
     decorate(event)
     queue << event
+  rescue NoMethodError => e
+    @logger.error("Failed to create event for #{commit_hash} with #{e}")
   end
 end
