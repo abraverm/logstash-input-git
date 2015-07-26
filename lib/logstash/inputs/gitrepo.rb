@@ -86,9 +86,10 @@ class LogStash::Inputs::GitRepo < LogStash::Inputs::Base
       "#{branch} at /tmp/#{@name}_#{@branch}")
     FileUtils.remove_dir("/tmp/#{@name}_#{@branch}", force: true)
     git = Git.clone(@repository, @name, path: "/tmp/#{@name}_#{@branch}")
-    git.fetch
     git.checkout(@branch)
     git
+  rescue
+    retry
   end
 
   private
